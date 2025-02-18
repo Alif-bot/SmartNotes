@@ -15,6 +15,7 @@ class NotesViewModel: ObservableObject {
 
     init() {
         fetchNotes()
+        requestNotificationPermission() 
     }
 
     func fetchNotes() {
@@ -28,15 +29,16 @@ class NotesViewModel: ObservableObject {
         }
     }
 
-    func addNote(title: String, content: String) {
-        let context = PersistenceController.shared.container.viewContext
-        let newNote = Note(context: context) // Correct way to initialize
+    func addNote(title: String, content: String) -> Note? {
+        let newNote = Note(context: context)
         newNote.title = title
         newNote.content = content
         newNote.createdAt = Date()
 
         saveContext()
         fetchNotes()
+        
+        return newNote
     }
 
     func deleteNote(_ note: Note) {
@@ -52,4 +54,33 @@ class NotesViewModel: ObservableObject {
             print("Error saving context: \(error.localizedDescription)")
         }
     }
+    
+    func scheduleNotification(for note: Note, at date: Date) {
+        let content = UNMutableNotificationContent()
+        content.title = "Reminder: \(note.title ?? "Untitled")"
+        content.body = note.content ?? "No content"
+        content.sound = .default
+        
+        let calendar = Calendar.current
+        let triggerDate = calendar.dateComponents([.year, .month, .day, .hour, .minute], from: date)
+        
+        let trigger = UNCalendarNotificationTrigger(dateMatching: triggerDate, repeats: false)
+        let request = UNNotificationRequest(identifier: note.objectID.uriRepresentation().absoluteString, content: content, trigger: trigger)
+        
+        UNUserNotificationCenter.current().add(request) { error in
+            if let error = error {
+                print("Failed to schedule notification: \(error.localizedDescription)")
+            }
+        }
+    }
+    
+    func requestNotificationPermission() {
+            UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .badge, .sound]) { granted, error in
+                if let error = error {
+                    print("Notification permission error: \(error.localizedDescription)")
+                } else {
+                    print("Notification permission granted: \(granted)")
+                }
+            }
+        }
 }

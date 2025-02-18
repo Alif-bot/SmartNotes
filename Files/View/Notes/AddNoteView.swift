@@ -11,16 +11,21 @@ struct AddNoteView: View {
     @Environment(\.dismiss) var dismiss
     @State private var title = ""
     @State private var content = ""
+    @State private var reminderDate = Date()
     var viewModel: NotesViewModel
-
+    
     var body: some View {
         NavigationView {
             Form {
                 TextField("Title", text: $title)
+                
                 TextEditor(text: $content)
                     .frame(height: 200)
+
+                DatePicker("Set Reminder", selection: $reminderDate, displayedComponents: [.date, .hourAndMinute])
+                    .datePickerStyle(.compact)
             }
-            .navigationTitle("New Note")
+            .navigationTitle("New Note") // Ensure navigation title is set on Form
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button("Cancel") {
@@ -29,7 +34,10 @@ struct AddNoteView: View {
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Save") {
-                        viewModel.addNote(title: title, content: content)
+                        let newNote = viewModel.addNote(title: title, content: content)
+                        if let newNote = newNote {
+                            viewModel.scheduleNotification(for: newNote, at: reminderDate)
+                        }
                         dismiss()
                     }
                     .disabled(title.isEmpty || content.isEmpty)
