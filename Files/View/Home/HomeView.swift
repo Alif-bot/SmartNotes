@@ -11,7 +11,6 @@ struct HomeView: View {
     @StateObject private var viewModel = NotesViewModel()
     @State private var showAddNote = false
     @State private var animateList = false
-    @State private var showDrawingScreen = false
     
     var body: some View {
         NavigationView {
@@ -32,7 +31,7 @@ struct HomeView: View {
                 }
                 .onDelete(perform: deleteNote)
             }
-            .navigationTitle("SketchNote")
+            .navigationTitle("Smart Notes")
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button(action: {
@@ -49,22 +48,10 @@ struct HomeView: View {
                             .animation(.spring(), value: showAddNote)
                     }
                 }
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button(action: {
-                        showDrawingScreen.toggle()
-                    }) {
-                        Image(systemName: "pencil.tip.crop.circle") // Pencil icon
-                            .imageScale(.large)
-                    }
-                }
             }
             .sheet(isPresented: $showAddNote) {
                 AddNoteView(viewModel: viewModel)
             }
-            .sheet(isPresented: $showDrawingScreen) {
-                DrawingViewScreen()
-            }
-            
             .onAppear {
                 animateList = true
             }
@@ -78,4 +65,3 @@ struct HomeView: View {
         }
     }
 }
-

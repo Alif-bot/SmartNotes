@@ -1,5 +1,5 @@
 //
-//  SketchNoteApp.swift
+//  SmartNoteApp.swift
 //  SketchNote
 //
 //  Created by Md Alif Hossain on 18/2/25.
@@ -8,7 +8,7 @@
 import SwiftUI
 
 @main
-struct SketchNoteApp: App {
+struct SmartNoteApp: App {
     let persistenceController = PersistenceController.shared
 
     var body: some Scene {

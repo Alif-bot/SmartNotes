@@ -29,7 +29,8 @@ class NotesViewModel: ObservableObject {
     }
 
     func addNote(title: String, content: String) {
-        let newNote = Note(context: context)
+        let context = PersistenceController.shared.container.viewContext
+        let newNote = Note(context: context) // Correct way to initialize
         newNote.title = title
         newNote.content = content
         newNote.createdAt = Date()
