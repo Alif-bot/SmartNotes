@@ -1,5 +1,5 @@
 //
-//  FilNotesViewModel.swift
+//  NotesViewModel.swift
 //  SketchNote
 //
 //  Created by Md Alif Hossain on 18/2/25.
