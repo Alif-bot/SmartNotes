@@ -11,7 +11,8 @@ struct HomeView: View {
     @StateObject private var viewModel = NotesViewModel()
     @State private var showAddNote = false
     @State private var animateList = false
-
+    @State private var showDrawingScreen = false
+    
     var body: some View {
         NavigationView {
             List {
@@ -48,16 +49,28 @@ struct HomeView: View {
                             .animation(.spring(), value: showAddNote)
                     }
                 }
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button(action: {
+                        showDrawingScreen.toggle()
+                    }) {
+                        Image(systemName: "pencil.tip.crop.circle") // Pencil icon
+                            .imageScale(.large)
+                    }
+                }
             }
             .sheet(isPresented: $showAddNote) {
                 AddNoteView(viewModel: viewModel)
             }
+            .sheet(isPresented: $showDrawingScreen) {
+                DrawingViewScreen()
+            }
+            
             .onAppear {
                 animateList = true
             }
         }
     }
-
+    
     private func deleteNote(at offsets: IndexSet) {
         offsets.forEach { index in
             let note = viewModel.notes[index]
