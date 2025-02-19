@@ -61,7 +61,7 @@ struct HomeView: View {
     private func deleteNote(at offsets: IndexSet) {
         offsets.forEach { index in
             let note = viewModel.notes[index]
-            viewModel.deleteNote(note)
+            viewModel.eventHandeler(.delete(note: note))
         }
     }
 }

@@ -25,7 +25,7 @@ struct AddNoteView: View {
                 DatePicker("Set Reminder", selection: $reminderDate, displayedComponents: [.date, .hourAndMinute])
                     .datePickerStyle(.compact)
             }
-            .navigationTitle("New Note") // Ensure navigation title is set on Form
+            .navigationTitle("New Note")
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button("Cancel") {
@@ -36,7 +36,7 @@ struct AddNoteView: View {
                     Button("Save") {
                         let newNote = viewModel.addNote(title: title, content: content)
                         if let newNote = newNote {
-                            viewModel.scheduleNotification(for: newNote, at: reminderDate)
+                            viewModel.eventHandeler(.notification(note: newNote, date: reminderDate))
                         }
                         dismiss()
                     }

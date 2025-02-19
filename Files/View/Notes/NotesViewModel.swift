@@ -9,16 +9,50 @@ import SwiftUI
 import CoreData
 
 class NotesViewModel: ObservableObject {
+    
+    // MARK: - Properties
     @Published var notes: [Note] = []
 
     private let context = PersistenceController.shared.context
-
+    
+    // MARK: - UI Events
+    
+    enum Event {
+        case delete(note: Note)
+        case save
+        case notification(note: Note, date: Date)
+    }
+    
+    // MARK: - Init
+    
     init() {
         fetchNotes()
-        requestNotificationPermission() 
+        requestNotificationPermission()
+        
+        print("***** NotesViewModel created *****")
+    }
+    
+    deinit {
+        print("--- NotesViewModel deallocated ---")
+    }
+    
+    // MARK: - Public Methods
+    
+    func eventHandeler(_ event: Event) {
+        switch event {
+            
+        case .delete(let note):
+            deleteNote(note)
+            
+        case .save:
+            saveContext()
+            
+        case .notification(let note, let date):
+            scheduleNotification(for: note, at: date)
+        }
     }
 
-    func fetchNotes() {
+    private func fetchNotes() {
         let request: NSFetchRequest<Note> = Note.fetchRequest()
         request.sortDescriptors = [NSSortDescriptor(keyPath: \Note.createdAt, ascending: false)]
         
@@ -29,7 +63,7 @@ class NotesViewModel: ObservableObject {
         }
     }
 
-    func addNote(title: String, content: String) -> Note? {
+   func addNote(title: String, content: String) -> Note? {
         let newNote = Note(context: context)
         newNote.title = title
         newNote.content = content
@@ -41,7 +75,7 @@ class NotesViewModel: ObservableObject {
         return newNote
     }
 
-    func deleteNote(_ note: Note) {
+    private func deleteNote(_ note: Note) {
         context.delete(note)
         saveContext()
         fetchNotes()
@@ -55,7 +89,7 @@ class NotesViewModel: ObservableObject {
         }
     }
     
-    func scheduleNotification(for note: Note, at date: Date) {
+    private func scheduleNotification(for note: Note, at date: Date) {
         let content = UNMutableNotificationContent()
         content.title = "Reminder: \(note.title ?? "Untitled")"
         content.body = note.content ?? "No content"
@@ -75,12 +109,12 @@ class NotesViewModel: ObservableObject {
     }
     
     func requestNotificationPermission() {
-            UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .badge, .sound]) { granted, error in
-                if let error = error {
-                    print("Notification permission error: \(error.localizedDescription)")
-                } else {
-                    print("Notification permission granted: \(granted)")
-                }
+        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .badge, .sound]) { granted, error in
+            if let error = error {
+                print("Notification permission error: \(error.localizedDescription)")
+            } else {
+                print("Notification permission granted: \(granted)")
             }
         }
+    }
 }
