@@ -1,47 +1,65 @@
 //
-//  NotesViewModel.swift
+//  AddNoteViewModel.swift
 //  SmartNotes
 //
-//  Created by Md Alif Hossain on 18/2/25.
+//  Created by Md Alif Hossain on 19/2/25.
 //
 
+import SwiftUI
 import CoreData
 import UserNotifications
 
-class NotesViewModel: NotesStorageable {
+class AddNoteViewModel: NotesStorageable, ObservableObject {
+    
+    @Environment(\.dismiss) var dismiss
     
     // MARK: - Properties
     @Published var notes: [Note] = []
+    @Published var title: String = ""
+    @Published var content: String = ""
+    @Published var reminderDate: Date = Date()
+
     let context: NSManagedObjectContext = PersistenceController.shared.context
-    
+
+    var isSaveDisabled: Bool {
+        title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || content.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
     // MARK: - UI Events
     enum Event {
-        case delete(note: Note)
         case save
+        case notification(note: Note, date: Date)
     }
-    
-    // MARK: - Init
-    init() {
-        loadNotes()
-        requestNotificationPermission()
-        print("***** NotesViewModel created *****")
-    }
-    
-    deinit {
-        print("--- NotesViewModel deallocated ---")
-    }
-    
+
     // MARK: - Public Methods
     func eventHandler(_ event: Event) {
         switch event {
-        case .delete(let note):
-            deleteNote(note)
         case .save:
-            saveContext()
+            saveNote()
+        case .notification(let note, let date):
+            scheduleNotification(for: note, at: date)
         }
     }
+
+    // MARK: - Init
+    init() {
+        loadNotes()
+        print("***** AddNoteViewModel created *****")
+    }
+
+    deinit {
+        print("--- AddNoteViewModel deallocated ---")
+    }
     
-    // MARK: - Notification Handling
+    /// Saves the note and triggers a notification if a reminder is set.
+    private func saveNote() {
+        guard !isSaveDisabled else { return }
+
+        if let newNote = addNote(title: title, content: content) {
+            eventHandler(.notification(note: newNote, date: reminderDate))
+        }
+    }
+
     private func scheduleNotification(for note: Note, at date: Date) {
         let content = UNMutableNotificationContent()
         content.title = "Reminder: \(note.title ?? "Untitled")"
@@ -50,6 +68,7 @@ class NotesViewModel: NotesStorageable {
 
         let triggerDate = Calendar.current.dateComponents([.year, .month, .day, .hour, .minute], from: date)
         let trigger = UNCalendarNotificationTrigger(dateMatching: triggerDate, repeats: false)
+
         let request = UNNotificationRequest(identifier: note.objectID.uriRepresentation().absoluteString, content: content, trigger: trigger)
         
         UNUserNotificationCenter.current().add(request) { error in
@@ -58,14 +77,5 @@ class NotesViewModel: NotesStorageable {
             }
         }
     }
-    
-    func requestNotificationPermission() {
-        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .badge, .sound]) { granted, error in
-            if let error = error {
-                print("Notification permission error: \(error.localizedDescription)")
-            } else {
-                print("Notification permission granted: \(granted)")
-            }
-        }
-    }
 }
+

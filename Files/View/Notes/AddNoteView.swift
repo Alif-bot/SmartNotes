@@ -9,38 +9,37 @@ import SwiftUI
 
 struct AddNoteView: View {
     @Environment(\.dismiss) var dismiss
-    @State private var title = ""
-    @State private var content = ""
-    @State private var reminderDate = Date()
-    var viewModel: NotesViewModel
+    @StateObject private var viewModel: AddNoteViewModel
+    
+    init(viewModel: @autoclosure @escaping () -> AddNoteViewModel) {
+        self._viewModel = StateObject(wrappedValue: viewModel())
+    }
     
     var body: some View {
         NavigationView {
             Form {
-                TextField("Title", text: $title)
+                TextField("Title", text: $viewModel.title)
                 
-                TextEditor(text: $content)
+                TextEditor(text: $viewModel.content)
                     .frame(height: 200)
-
-                DatePicker("Set Reminder", selection: $reminderDate, displayedComponents: [.date, .hourAndMinute])
+                
+                DatePicker("Set Reminder", selection: $viewModel.reminderDate, displayedComponents: [.date, .hourAndMinute])
                     .datePickerStyle(.compact)
             }
             .navigationTitle("New Note")
             .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
+                ToolbarItemGroup(placement: .navigationBarLeading) {
                     Button("Cancel") {
                         dismiss()
                     }
                 }
-                ToolbarItem(placement: .navigationBarTrailing) {
+                
+                ToolbarItemGroup(placement: .navigationBarTrailing) {
                     Button("Save") {
-                        let newNote = viewModel.addNote(title: title, content: content)
-                        if let newNote = newNote {
-                            viewModel.eventHandeler(.notification(note: newNote, date: reminderDate))
-                        }
+                        viewModel.eventHandler(.save)
                         dismiss()
                     }
-                    .disabled(title.isEmpty || content.isEmpty)
+                    .disabled(viewModel.isSaveDisabled)
                 }
             }
         }

@@ -49,8 +49,10 @@ struct HomeView: View {
                     }
                 }
             }
-            .sheet(isPresented: $showAddNote) {
-                AddNoteView(viewModel: viewModel)
+            .sheet(isPresented: $showAddNote, onDismiss: {
+                viewModel.loadNotes() // Refresh notes when sheet is dismissed
+            }) {
+                AddNoteView(viewModel: AddNoteViewModel())
             }
             .onAppear {
                 animateList = true
@@ -61,7 +63,7 @@ struct HomeView: View {
     private func deleteNote(at offsets: IndexSet) {
         offsets.forEach { index in
             let note = viewModel.notes[index]
-            viewModel.eventHandeler(.delete(note: note))
+            viewModel.eventHandler(.delete(note: note))
         }
     }
 }
